@@ -1,8 +1,13 @@
-.PHONY: help install install-dev run test lint format clean docker-build docker-run migrate create-migration
+.PHONY: help venv install install-dev run test lint format clean docker-build docker-run migrate create-migration setup-dev
+
+VENV = venv
+PYTHON = $(VENV)/bin/python
+PIP = $(VENV)/bin/pip
 
 # Default target
 help:
 	@echo "Available targets:"
+	@echo "  venv         - Create virtual environment"
 	@echo "  install       - Install production dependencies"
 	@echo "  install-dev   - Install development dependencies"
 	@echo "  run          - Run the development server"
@@ -15,30 +20,39 @@ help:
 	@echo "  docker-run   - Run with Docker Compose"
 	@echo "  migrate      - Run database migrations"
 	@echo "  create-migration - Create new migration"
+	@echo "  setup-dev    - Complete development setup"
 
-install:
-	pip install -r requirements.txt
+venv:
+	python3 -m venv $(VENV)
+	@echo "Virtual environment created. Activate with: source $(VENV)/bin/activate"
 
-install-dev:
-	pip install -r requirements-dev.txt
+install: venv
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements.txt
+	@echo "Production dependencies installed in virtual environment"
+
+install-dev: venv
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements-dev.txt
+	@echo "Development dependencies installed in virtual environment"
 
 run:
-	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	$(PYTHON) -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 test:
-	pytest
+	$(VENV)/bin/pytest
 
 test-cov:
-	pytest --cov=app --cov-report=html --cov-report=term
+	$(VENV)/bin/pytest --cov=app --cov-report=html --cov-report=term
 
 lint:
-	flake8 app/
-	mypy app/
-	bandit -r app/
+	$(VENV)/bin/flake8 app/
+	$(VENV)/bin/mypy app/
+	$(VENV)/bin/bandit -r app/
 
 format:
-	black app/ tests/
-	isort app/ tests/
+	$(VENV)/bin/black app/ tests/
+	$(VENV)/bin/isort app/ tests/
 
 clean:
 	find . -type d -name "__pycache__" -delete
@@ -47,6 +61,8 @@ clean:
 	find . -type f -name "*.pyd" -delete
 	find . -type f -name ".coverage" -delete
 	find . -type d -name "*.egg-info" -delete
+	rm -rf $(VENV)
+	@echo "Cleaned up cache files and virtual environment"
 
 docker-build:
 	docker-compose build
@@ -58,15 +74,17 @@ docker-down:
 	docker-compose down
 
 migrate:
-	alembic upgrade head
+	$(VENV)/bin/alembic upgrade head
 
 create-migration:
 	@read -p "Enter migration message: " message; \
-	alembic revision --autogenerate -m "$$message"
+	$(VENV)/bin/alembic revision --autogenerate -m "$$message"
 
-setup-dev:
-	pip install -r requirements-dev.txt
-	pre-commit install
+setup-dev: install-dev
+	$(VENV)/bin/pre-commit install
 	cp .env.example .env
+	@echo ""
 	@echo "Development environment setup complete!"
+	@echo "Virtual environment created at: $(VENV)"
+	@echo "Activate with: source $(VENV)/bin/activate"
 	@echo "Don't forget to update .env with your database credentials"

@@ -2,8 +2,10 @@
 Database Connection and Session Management
 """
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from loguru import logger
 
 from app.config.settings import settings
@@ -17,7 +19,7 @@ engine = create_async_engine(
 )
 
 # Create async session factory
-AsyncSessionLocal = sessionmaker(
+AsyncSessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False,
@@ -25,21 +27,21 @@ AsyncSessionLocal = sessionmaker(
     autoflush=False,
 )
 
-# Create declarative base
-Base = declarative_base()
+
+# Create declarative base using modern SQLAlchemy approach
+class Base(DeclarativeBase):
+    pass
 
 
-async def get_db() -> AsyncSession:
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Get database session"""
     async with AsyncSessionLocal() as session:
         try:
             yield session
-            await session.commit()
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()
 
 
 async def init_db():
