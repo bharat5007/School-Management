@@ -10,7 +10,7 @@ from loguru import logger
 from app.config.settings import settings
 from app.database.connection import init_db
 from app.middleware.logging import LoggingMiddleware
-from app.routes import auth, health, users
+from app.routes import auth, bulk_notification, health, notification, users
 
 
 @asynccontextmanager
@@ -53,7 +53,16 @@ def create_application() -> FastAPI:
     # Include routers
     app.include_router(health.router, prefix=settings.API_V1_STR, tags=["health"])
     app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["authentication"])
-    app.include_router(users.router, prefix=settings.API_V1_STR, tags=["users"])
+    app.include_router(
+        notification.router,
+        prefix=f"{settings.API_V1_STR}/notification",
+        tags=["notifications"],
+    )
+    app.include_router(
+        bulk_notification.router,
+        prefix=f"{settings.API_V1_STR}/bulk-notification",
+        tags=["bulk-notifications"],
+    )
 
     return app
 
