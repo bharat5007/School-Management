@@ -1,6 +1,3 @@
-"""
-Authentication Routes
-"""
 from fastapi import APIRouter, Request
 
 from app.service_managers.auth_service import AuthService
