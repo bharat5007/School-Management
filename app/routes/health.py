@@ -18,7 +18,7 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "service": "FastAPI Production App"
+        "service": "FastAPI Production App",
     }
 
 

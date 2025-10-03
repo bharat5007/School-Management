@@ -57,6 +57,7 @@ async def async_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture
 def override_get_db(async_session: AsyncSession):
     """Override database dependency"""
+
     async def _override_get_db():
         yield async_session
 

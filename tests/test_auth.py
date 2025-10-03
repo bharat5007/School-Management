@@ -15,7 +15,7 @@ class TestAuth:
             "username": "testuser",
             "first_name": "Test",
             "last_name": "User",
-            "password": "testpassword123"
+            "password": "testpassword123",
         }
 
         response = client.post("/api/v1/register", json=user_data)
@@ -34,7 +34,7 @@ class TestAuth:
             "username": "user1",
             "first_name": "Test",
             "last_name": "User",
-            "password": "testpassword123"
+            "password": "testpassword123",
         }
 
         # First registration
@@ -54,17 +54,14 @@ class TestAuth:
             "username": "loginuser",
             "first_name": "Login",
             "last_name": "User",
-            "password": "loginpassword123"
+            "password": "loginpassword123",
         }
 
         register_response = client.post("/api/v1/register", json=user_data)
         assert register_response.status_code == 200
 
         # Then login
-        login_data = {
-            "email": "login@example.com",
-            "password": "loginpassword123"
-        }
+        login_data = {"email": "login@example.com", "password": "loginpassword123"}
 
         response = client.post("/api/v1/login", json=login_data)
         assert response.status_code == 200
@@ -77,10 +74,7 @@ class TestAuth:
 
     def test_login_invalid_credentials(self, client: TestClient):
         """Test login with invalid credentials"""
-        login_data = {
-            "email": "nonexistent@example.com",
-            "password": "wrongpassword"
-        }
+        login_data = {"email": "nonexistent@example.com", "password": "wrongpassword"}
 
         response = client.post("/api/v1/login", json=login_data)
         assert response.status_code == 401

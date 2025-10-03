@@ -18,4 +18,5 @@ ERROR_MESSAGES = {
     "UNAUTHORIZED": "Not authenticated",
     "FORBIDDEN": "Not enough permissions",
     "INTERNAL_SERVER_ERROR": "Internal server error",
+    "WRONG_PASSWORD": "User have entered wrong password",
 }

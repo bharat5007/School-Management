@@ -11,6 +11,7 @@ from app.constants.enums import UserRole, UserStatus
 
 class UserBase(BaseModel):
     """Base user schema"""
+
     email: EmailStr
     username: str
     first_name: str
@@ -22,6 +23,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     """User creation schema"""
+
     password: str
 
     @validator("password")
@@ -39,6 +41,7 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     """User update schema"""
+
     email: Optional[EmailStr] = None
     username: Optional[str] = None
     first_name: Optional[str] = None
@@ -50,6 +53,7 @@ class UserUpdate(BaseModel):
 
 class UserResponse(UserBase):
     """User response schema"""
+
     id: int
     is_verified: bool
     created_at: datetime
@@ -61,5 +65,6 @@ class UserResponse(UserBase):
 
 class UserLogin(BaseModel):
     """User login schema"""
+
     email: EmailStr
     password: str

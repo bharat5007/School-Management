@@ -1,12 +1,11 @@
 """
 Database Connection and Session Management
 """
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.ext.asyncio import async_sessionmaker
 from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import async_sessionmaker
+
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
 from app.config.settings import settings
 
@@ -33,7 +32,6 @@ class Base(DeclarativeBase):
     pass
 
 
-
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Get database session"""
     async with AsyncSessionLocal() as session:
@@ -49,4 +47,5 @@ async def init_db():
     logger.info("Initializing database connection...")
     # Import all models here to ensure they are registered with SQLAlchemy
     from app.models import user  # noqa: F401
+
     logger.info("Database models imported successfully")

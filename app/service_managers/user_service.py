@@ -27,17 +27,16 @@ class UserService:
         result = await db.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_user_by_username(self, db: AsyncSession, username: str) -> Optional[User]:
+    async def get_user_by_username(
+        self, db: AsyncSession, username: str
+    ) -> Optional[User]:
         """Get user by username"""
         query = select(User).where(User.username == username)
         result = await db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_users(
-        self, 
-        db: AsyncSession, 
-        skip: int = 0, 
-        limit: int = 100
+        self, db: AsyncSession, skip: int = 0, limit: int = 100
     ) -> List[User]:
         """Get multiple users with pagination"""
         query = select(User).offset(skip).limit(limit)
@@ -53,17 +52,14 @@ class UserService:
         return user
 
     async def update_user(
-        self, 
-        db: AsyncSession, 
-        user_id: int, 
-        user_data: UserUpdate
+        self, db: AsyncSession, user_id: int, user_data: UserUpdate
     ) -> Optional[User]:
         """Update user information"""
         user = await self.get_user_by_id(db, user_id)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=ERROR_MESSAGES["USER_NOT_FOUND"]
+                detail=ERROR_MESSAGES["USER_NOT_FOUND"],
             )
 
         # Update only provided fields
@@ -81,7 +77,7 @@ class UserService:
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=ERROR_MESSAGES["USER_NOT_FOUND"]
+                detail=ERROR_MESSAGES["USER_NOT_FOUND"],
             )
 
         await db.delete(user)
