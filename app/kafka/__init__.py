@@ -8,21 +8,26 @@ This package provides:
 - Consumers: Specialized consumers for different notification types
 """
 
-# Import main classes for easy access
-from app.kafka.producer import KafkaProducerClient, kafka_producer, get_kafka_producer
+from app.kafka.admin import (
+    create_notification_topics,
+    delete_notification_topics,
+    get_topic_info,
+)
 from app.kafka.consumer import KafkaConsumerClient
-from app.kafka.admin import create_notification_topics, get_topic_info, delete_notification_topics
+from app.kafka.consumer import KafkaConsumerClient as KafkaConsumerClient_Legacy
 
 # Import for backward compatibility (if needed)
+# Import main classes for easy access
+from app.kafka.producer import KafkaProducerClient
 from app.kafka.producer import KafkaProducerClient as KafkaProducerClient_Legacy
-from app.kafka.consumer import KafkaConsumerClient as KafkaConsumerClient_Legacy
+from app.kafka.producer import get_kafka_producer, kafka_producer
 
 __all__ = [
     "KafkaProducerClient",
-    "KafkaConsumerClient", 
+    "KafkaConsumerClient",
     "kafka_producer",
     "get_kafka_producer",
     "create_notification_topics",
-    "get_topic_info", 
-    "delete_notification_topics"
+    "get_topic_info",
+    "delete_notification_topics",
 ]

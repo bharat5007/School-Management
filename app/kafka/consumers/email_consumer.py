@@ -1,7 +1,7 @@
 """
 Email Notification Consumer
 """
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 from loguru import logger
 
@@ -24,7 +24,9 @@ class EmailNotificationConsumer(BaseNotificationConsumer):
             # Parse the Kafka payload
             email_payload = BulkEmailKafkaPayload(**message_data)
 
-            logger.info(f"Processing email batch {email_payload.batch_id} with {len(email_payload.recipients)} recipients")
+            logger.info(
+                f"Processing email batch {email_payload.batch_id} with {len(email_payload.recipients)} recipients"
+            )
 
             # Process each recipient in the batch
             results = await self._process_email_batch(email_payload)
@@ -35,7 +37,9 @@ class EmailNotificationConsumer(BaseNotificationConsumer):
             logger.error(f"Failed to process email message: {str(e)}")
             raise
 
-    async def _process_email_batch(self, payload: BulkEmailKafkaPayload) -> Dict[str, int]:
+    async def _process_email_batch(
+        self, payload: BulkEmailKafkaPayload
+    ) -> Dict[str, int]:
         """Process a batch of email notifications"""
         results = {"success": 0, "failed": 0}
 
@@ -57,7 +61,9 @@ class EmailNotificationConsumer(BaseNotificationConsumer):
                     else:
                         results["failed"] += 1
                 except Exception as e:
-                    logger.error(f"Failed to send email to {recipient.get('email', 'unknown')}: {str(e)}")
+                    logger.error(
+                        f"Failed to send email to {recipient.get('email', 'unknown')}: {str(e)}"
+                    )
                     results["failed"] += 1
 
         return results
@@ -66,30 +72,44 @@ class EmailNotificationConsumer(BaseNotificationConsumer):
         """Send a single email with BCC to all recipients"""
         try:
             # Extract email addresses
-            bcc_emails = [recipient["email"] for recipient in payload.recipients if "email" in recipient]
+            bcc_emails = [
+                recipient["email"]
+                for recipient in payload.recipients
+                if "email" in recipient
+            ]
 
-            logger.info(f"Sending BCC email to {len(bcc_emails)} recipients for batch {payload.batch_id}")
+            logger.info(
+                f"Sending BCC email to {len(bcc_emails)} recipients for batch {payload.batch_id}"
+            )
 
             # TODO: Implement actual email sending logic here
             # This is where you'd integrate with your email service provider
             # (e.g., SendGrid, AWS SES, SMTP server, etc.)
 
             # Placeholder for actual email sending
-            await self._simulate_email_sending(bcc_emails, payload.email_content.subject)
+            await self._simulate_email_sending(
+                bcc_emails, payload.email_content.subject
+            )
 
             return True
 
         except Exception as e:
-            logger.error(f"Failed to send BCC email for batch {payload.batch_id}: {str(e)}")
+            logger.error(
+                f"Failed to send BCC email for batch {payload.batch_id}: {str(e)}"
+            )
             return False
 
-    async def _send_individual_email(self, recipient: Dict[str, Any], payload: BulkEmailKafkaPayload) -> bool:
+    async def _send_individual_email(
+        self, recipient: Dict[str, Any], payload: BulkEmailKafkaPayload
+    ) -> bool:
         """Send individual email to a recipient"""
         try:
             email_address = recipient["email"]
             recipient_name = recipient.get("name", "")
 
-            logger.info(f"Sending individual email to {email_address} for batch {payload.batch_id}")
+            logger.info(
+                f"Sending individual email to {email_address} for batch {payload.batch_id}"
+            )
 
             # TODO: Implement actual email sending logic here
             # This would include:
@@ -98,15 +118,21 @@ class EmailNotificationConsumer(BaseNotificationConsumer):
             # 3. Email service provider API call
 
             # Placeholder for actual email sending
-            await self._simulate_email_sending([email_address], payload.email_content.subject, recipient_name)
+            await self._simulate_email_sending(
+                [email_address], payload.email_content.subject, recipient_name
+            )
 
             return True
 
         except Exception as e:
-            logger.error(f"Failed to send individual email to {recipient.get('email', 'unknown')}: {str(e)}")
+            logger.error(
+                f"Failed to send individual email to {recipient.get('email', 'unknown')}: {str(e)}"
+            )
             return False
 
-    async def _simulate_email_sending(self, emails: List[str], subject: str, recipient_name: str = None):
+    async def _simulate_email_sending(
+        self, emails: List[str], subject: str, recipient_name: str = None
+    ):
         """Simulate email sending (replace with actual implementation)"""
         import asyncio
 

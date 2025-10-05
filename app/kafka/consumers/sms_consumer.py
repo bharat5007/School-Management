@@ -2,7 +2,7 @@
 SMS Notification Consumer
 """
 import asyncio
-from typing import Dict, Any
+from typing import Any, Dict
 
 from loguru import logger
 
@@ -25,7 +25,9 @@ class SMSNotificationConsumer(BaseNotificationConsumer):
             # Parse the Kafka payload
             sms_payload = BulkSMSKafkaPayload(**message_data)
 
-            logger.info(f"Processing SMS batch {sms_payload.batch_id} with {len(sms_payload.recipients)} recipients")
+            logger.info(
+                f"Processing SMS batch {sms_payload.batch_id} with {len(sms_payload.recipients)} recipients"
+            )
 
             # Process SMS batch with rate limiting
             results = await self._process_sms_batch(sms_payload)
@@ -44,7 +46,9 @@ class SMSNotificationConsumer(BaseNotificationConsumer):
         rate_limit = payload.rate_limit_per_second
         delay_between_sms = 1.0 / rate_limit if rate_limit > 0 else 0.1
 
-        logger.info(f"Processing SMS batch with rate limit: {rate_limit}/sec (delay: {delay_between_sms}s)")
+        logger.info(
+            f"Processing SMS batch with rate limit: {rate_limit}/sec (delay: {delay_between_sms}s)"
+        )
 
         for i, recipient in enumerate(payload.recipients):
             try:
@@ -59,12 +63,16 @@ class SMSNotificationConsumer(BaseNotificationConsumer):
                     await asyncio.sleep(delay_between_sms)
 
             except Exception as e:
-                logger.error(f"Failed to send SMS to {recipient.get('phone', 'unknown')}: {str(e)}")
+                logger.error(
+                    f"Failed to send SMS to {recipient.get('phone', 'unknown')}: {str(e)}"
+                )
                 results["failed"] += 1
 
         return results
 
-    async def _send_sms(self, recipient: Dict[str, Any], payload: BulkSMSKafkaPayload) -> bool:
+    async def _send_sms(
+        self, recipient: Dict[str, Any], payload: BulkSMSKafkaPayload
+    ) -> bool:
         """Send SMS to a recipient"""
         try:
             phone_number = recipient["phone"]
@@ -88,16 +96,22 @@ class SMSNotificationConsumer(BaseNotificationConsumer):
             return True
 
         except Exception as e:
-            logger.error(f"Failed to send SMS to {recipient.get('phone', 'unknown')}: {str(e)}")
+            logger.error(
+                f"Failed to send SMS to {recipient.get('phone', 'unknown')}: {str(e)}"
+            )
             return False
 
-    async def _simulate_sms_sending(self, phone: str, message: str, recipient_name: str = None):
+    async def _simulate_sms_sending(
+        self, phone: str, message: str, recipient_name: str = None
+    ):
         """Simulate SMS sending (replace with actual implementation)"""
         # Simulate API call delay
         await asyncio.sleep(0.05)
 
         name_display = f" ({recipient_name})" if recipient_name else ""
-        logger.info(f"📱 SMS sent to {phone}{name_display}: '{message[:50]}{'...' if len(message) > 50 else ''}'")
+        logger.info(
+            f"📱 SMS sent to {phone}{name_display}: '{message[:50]}{'...' if len(message) > 50 else ''}'"
+        )
 
         # In a real implementation, you would:
         # 1. Format phone number correctly

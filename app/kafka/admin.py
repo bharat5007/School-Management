@@ -17,15 +17,33 @@ async def create_notification_topics():
     try:
         admin_client = KafkaAdminClient(
             bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
-            client_id="notification_admin"
+            client_id="notification_admin",
         )
 
         topics = [
-            NewTopic(name=settings.KAFKA_TOPIC_EMAIL_NOTIFICATIONS, num_partitions=3, replication_factor=1),
-            NewTopic(name=settings.KAFKA_TOPIC_SMS_NOTIFICATIONS, num_partitions=3, replication_factor=1),
-            NewTopic(name=settings.KAFKA_TOPIC_WHATSAPP_NOTIFICATIONS, num_partitions=3, replication_factor=1),
-            NewTopic(name=settings.KAFKA_TOPIC_BULK_NOTIFICATIONS, num_partitions=5, replication_factor=1),
-            NewTopic(name=settings.KAFKA_TOPIC_DLQ, num_partitions=1, replication_factor=1),
+            NewTopic(
+                name=settings.KAFKA_TOPIC_EMAIL_NOTIFICATIONS,
+                num_partitions=3,
+                replication_factor=1,
+            ),
+            NewTopic(
+                name=settings.KAFKA_TOPIC_SMS_NOTIFICATIONS,
+                num_partitions=3,
+                replication_factor=1,
+            ),
+            NewTopic(
+                name=settings.KAFKA_TOPIC_WHATSAPP_NOTIFICATIONS,
+                num_partitions=3,
+                replication_factor=1,
+            ),
+            NewTopic(
+                name=settings.KAFKA_TOPIC_BULK_NOTIFICATIONS,
+                num_partitions=5,
+                replication_factor=1,
+            ),
+            NewTopic(
+                name=settings.KAFKA_TOPIC_DLQ, num_partitions=1, replication_factor=1
+            ),
         ]
 
         admin_client.create_topics(new_topics=topics, validate_only=False)
@@ -44,7 +62,7 @@ def get_topic_info():
     try:
         admin_client = KafkaAdminClient(
             bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
-            client_id="notification_admin_info"
+            client_id="notification_admin_info",
         )
 
         metadata = admin_client.list_topics()
@@ -66,7 +84,7 @@ def delete_notification_topics():
     try:
         admin_client = KafkaAdminClient(
             bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
-            client_id="notification_admin_delete"
+            client_id="notification_admin_delete",
         )
 
         topics_to_delete = [

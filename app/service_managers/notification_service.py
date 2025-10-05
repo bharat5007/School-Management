@@ -9,7 +9,6 @@ from loguru import logger
 
 from app.constants.enums import NotificationType
 from app.kafka.producer import get_kafka_producer
-from app.kafka.producer import get_kafka_producer
 from app.schemas.notification import (
     EmailContent,
     EmailServicePayload,

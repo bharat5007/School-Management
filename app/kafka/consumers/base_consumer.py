@@ -3,13 +3,13 @@ Base Consumer for processing Kafka messages
 """
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict
 
 from aiokafka import ConsumerRecord
 from loguru import logger
 
-from app.kafka.consumer import KafkaConsumerClient
 from app.constants.enums import NotificationType
+from app.kafka.consumer import KafkaConsumerClient
 
 
 class BaseNotificationConsumer(ABC):
@@ -55,7 +55,9 @@ class BaseNotificationConsumer(ABC):
     async def _message_handler(self, message: ConsumerRecord):
         """Handle incoming message"""
         try:
-            logger.info(f"Processing message from topic {message.topic}, partition {message.partition}, offset {message.offset}")
+            logger.info(
+                f"Processing message from topic {message.topic}, partition {message.partition}, offset {message.offset}"
+            )
 
             # Extract message data
             message_data = message.value
@@ -79,7 +81,9 @@ class BaseNotificationConsumer(ABC):
         """Handle message processing errors"""
         try:
             # Log error details
-            logger.error(f"Message processing failed - Topic: {message.topic}, Partition: {message.partition}, Offset: {message.offset}, Error: {error}")
+            logger.error(
+                f"Message processing failed - Topic: {message.topic}, Partition: {message.partition}, Offset: {message.offset}, Error: {error}"
+            )
 
             # Here you could implement DLQ logic, retry mechanisms, etc.
             # For now, we'll just log the failure

@@ -28,7 +28,7 @@ class KafkaConsumerClient:
                 *self.topics,
                 bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
                 group_id=self.group_id,
-                value_deserializer=lambda x: json.loads(x.decode('utf-8')),
+                value_deserializer=lambda x: json.loads(x.decode("utf-8")),
                 auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
                 max_poll_records=settings.KAFKA_CONSUMER_MAX_POLL_RECORDS,
                 # Consumer optimization
