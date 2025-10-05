@@ -21,21 +21,8 @@ from app.schemas.bulk_notification import (
 
 
 class BulkNotificationService:
-    """
-    Service for handling bulk notifications efficiently
-    Implements batching, rate limiting, and cost optimization
-    """
-
-    async def process_bulk_notification(
-        self, bulk_request: BulkNotificationRequest
-    ) -> BulkNotificationResponse:
-        """
-        Main method to process bulk notification requests
-        """
+    async def process_bulk_notification(self, bulk_request: BulkNotificationRequest):
         notification_id = str(uuid.uuid4())
-        logger.info(
-            f"Processing bulk notification {notification_id} for {len(bulk_request.recipients)} recipients"
-        )
 
         # Step 1: Analyze and optimize recipients per channel
         channel_recipients = self._analyze_recipients_by_channel(bulk_request)
@@ -80,13 +67,7 @@ class BulkNotificationService:
             estimated_cost=estimated_cost,
         )
 
-    def _analyze_recipients_by_channel(
-        self, bulk_request: BulkNotificationRequest
-    ) -> Dict[NotificationType, List[BulkRecipient]]:
-        """
-        Analyze recipients and group them by available channels
-        Also handles deduplication and validation
-        """
+    def _analyze_recipients_by_channel(self, bulk_request: BulkNotificationRequest):
         channel_recipients = {
             NotificationType.EMAIL: [],
             NotificationType.SMS: [],
@@ -122,7 +103,7 @@ class BulkNotificationService:
         channel: NotificationType,
         recipients: List[BulkRecipient],
         bulk_request: BulkNotificationRequest,
-    ) -> List[Dict]:
+    ):
         """
         Create optimized batches for a specific service
         Different services have different optimal batch sizes
