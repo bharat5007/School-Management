@@ -9,7 +9,8 @@ from loguru import logger
 
 from app.config.settings import settings
 from app.database.connection import init_db
-from app.kafka.kafka_client import kafka_producer
+from app.kafka.producer import kafka_producer
+from app.kafka.consumer.consumer_manager import consumer_manager
 from app.middleware.logging import LoggingMiddleware
 from app.routes import auth, bulk_notification, health, notification, users
 
@@ -19,15 +20,48 @@ async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
     logger.info("Starting up the application...")
+
+    # Initialize database
+
+    # Initialize database
     await init_db()
+
+    # Initialize Kafka consumers
+    try:
+        await consumer_manager.start_all()
+        logger.info("Kafka consumers initialized successfully")
+    except Exception as e:
+        logger.warning(f"Kafka consumers initialization failed: {e}")
+
+    # Initialize Kafka producer
+
+    # Initialize Kafka consumers
+    try:
+        await consumer_manager.start_all()
+        logger.info("Kafka consumers initialized successfully")
+    except Exception as e:
+        logger.warning(f"Kafka consumers initialization failed: {e}")
+
+    # Initialize Kafka producer
     try:
         await kafka_producer.start()
         logger.info("Kafka producer initialized successfully")
     except Exception as e:
         logger.warning(f"Kafka producer initialization failed: {e}")
-    logger.info("Database initialized successfully")
+
+    # Initialize Kafka consumers
+    try:
+        await consumer_manager.start_all()
+        logger.info("Kafka consumers initialized successfully")
+    except Exception as e:
+        logger.warning(f"Kafka consumers initialization failed: {e}")
+
     yield
     # Shutdown
+    await consumer_manager.stop_all()
+    logger.info("Kafka consumers stopped")
+    await consumer_manager.stop_all()
+    logger.info("Kafka consumers stopped")
     await kafka_producer.stop()
     logger.info("Kafka producer stopped")
     logger.info("Shutting down the application...")

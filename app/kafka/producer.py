@@ -1,12 +1,12 @@
 """
-Kafka Producer and Consumer utilities for notification system
+Kafka Producer for sending notification messages
 """
 import json
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
+from aiokafka import AIOKafkaProducer
 from aiokafka.errors import KafkaError
 from loguru import logger
 
@@ -192,87 +192,7 @@ class KafkaProducerClient:
             logger.error(f"Failed to send to DLQ: {str(dlq_error)}")
 
 
-class KafkaConsumerClient:
-    """
-    Async Kafka Consumer for processing notification messages
-    """
-    
-    def __init__(self, topics: List[str], group_id: Optional[str] = None):
-        self.topics = topics
-        self.group_id = group_id or settings.KAFKA_CONSUMER_GROUP_ID
-        self.consumer: Optional[AIOKafkaConsumer] = None
-        self.is_running = False
-    
-    async def start(self):
-        """Initialize and start Kafka consumer"""
-        try:
-            self.consumer = AIOKafkaConsumer(
-                *self.topics,
-                bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
-                group_id=self.group_id,
-                value_deserializer=lambda x: json.loads(x.decode('utf-8')),
-                auto_offset_reset=settings.KAFKA_CONSUMER_AUTO_OFFSET_RESET,
-                max_poll_records=settings.KAFKA_CONSUMER_MAX_POLL_RECORDS,
-                # Consumer optimization
-                fetch_min_bytes=1,
-                fetch_max_wait_ms=500,
-                # Error handling
-                retry_backoff_ms=100,
-                request_timeout_ms=40000,
-            )
-            
-            await self.consumer.start()
-            self.is_running = True
-            logger.info(f"Kafka consumer started for topics: {self.topics}")
-            
-        except Exception as e:
-            logger.error(f"Failed to start Kafka consumer: {str(e)}")
-            raise
-    
-    async def stop(self):
-        """Stop Kafka consumer"""
-        if self.consumer:
-            try:
-                self.is_running = False
-                await self.consumer.stop()
-                logger.info("Kafka consumer stopped")
-            except Exception as e:
-                logger.error(f"Error stopping Kafka consumer: {str(e)}")
-    
-    async def consume_messages(self, message_handler):
-        """
-        Consume messages and process them with provided handler
-        
-        Args:
-            message_handler: Async function to process messages
-        """
-        if not self.is_running or not self.consumer:
-            logger.error("Kafka consumer not running")
-            return
-        
-        logger.info("Starting message consumption...")
-        
-        try:
-            async for message in self.consumer:
-                try:
-                    # Process message
-                    await message_handler(message)
-                    
-                    # Commit offset after successful processing
-                    await self.consumer.commit()
-                    
-                except Exception as e:
-                    logger.error(f"Error processing message: {str(e)}")
-                    # Don't commit offset for failed messages
-                    continue
-                    
-        except Exception as e:
-            logger.error(f"Error in message consumption: {str(e)}")
-        finally:
-            logger.info("Message consumption stopped")
-
-
-# Global Kafka clients
+# Global Kafka producer instance
 kafka_producer = KafkaProducerClient()
 
 
@@ -281,34 +201,3 @@ async def get_kafka_producer() -> KafkaProducerClient:
     if not kafka_producer.is_connected:
         await kafka_producer.start()
     return kafka_producer
-
-
-async def create_notification_topics():
-    """
-    Create notification topics if they don't exist
-    This would typically be done by Kafka admin client or during deployment
-    """
-    from kafka import KafkaAdminClient, NewTopic
-    from kafka.errors import TopicAlreadyExistsError
-    
-    try:
-        admin_client = KafkaAdminClient(
-            bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
-            client_id="notification_admin"
-        )
-        
-        topics = [
-            NewTopic(name=settings.KAFKA_TOPIC_EMAIL_NOTIFICATIONS, num_partitions=3, replication_factor=1),
-            NewTopic(name=settings.KAFKA_TOPIC_SMS_NOTIFICATIONS, num_partitions=3, replication_factor=1),
-            NewTopic(name=settings.KAFKA_TOPIC_WHATSAPP_NOTIFICATIONS, num_partitions=3, replication_factor=1),
-            NewTopic(name=settings.KAFKA_TOPIC_BULK_NOTIFICATIONS, num_partitions=5, replication_factor=1),
-            NewTopic(name=settings.KAFKA_TOPIC_DLQ, num_partitions=1, replication_factor=1),
-        ]
-        
-        admin_client.create_topics(new_topics=topics, validate_only=False)
-        logger.info("Notification topics created successfully")
-        
-    except TopicAlreadyExistsError:
-        logger.info("Topics already exist, skipping creation")
-    except Exception as e:
-        logger.error(f"Error creating topics: {str(e)}")
