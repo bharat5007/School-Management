@@ -8,6 +8,7 @@ from typing import Dict, List, Union
 from loguru import logger
 
 from app.constants.enums import NotificationType
+from app.kafka.kafka_client import get_kafka_producer
 from app.schemas.notification import (
     EmailContent,
     EmailServicePayload,
@@ -26,6 +27,9 @@ class NotificationService:
     async def process_notification_request(
         self, notification_request: NotificationRequest
     ) -> NotificationResponse:
+        """
+        Main method to process notification request following the flowchart
+        """
         logger.info(
             f"Processing notification request for channels: {notification_request.channels}"
         )
@@ -46,18 +50,62 @@ class NotificationService:
             notification_id, extracted_services, notification_request
         )
 
-        # Step 5: Forward to Kafka (this would be the next step in your flowchart)
-        # For now, we'll just log it - you can implement Kafka producer later
-        logger.info(f"Payload prepared for Kafka: {kafka_payload.dict()}")
+        # Step 5: Send to Kafka (NEW - Actually send to Kafka)
+        kafka_success = await self._send_to_kafka(extracted_services, notification_id)
 
         # Return response to client
+        status = "sent_to_kafka" if kafka_success else "kafka_error"
         return NotificationResponse(
             notification_id=notification_id,
             services_to_process=notification_request.channels,
             estimated_delivery=self._calculate_estimated_delivery(
                 notification_request.priority
             ),
+            status=status,
         )
+
+    async def _send_to_kafka(
+        self,
+        service_payloads: List[
+            Union[EmailServicePayload, SMSServicePayload, WhatsAppServicePayload]
+        ],
+        notification_id: str,
+    ) -> bool:
+        """
+        Step 5: Actually send payloads to Kafka
+        """
+        try:
+            kafka_producer = await get_kafka_producer()
+            success_count = 0
+
+            for payload in service_payloads:
+                # Send each service payload to its respective Kafka topic
+                success = await kafka_producer.send_notification(
+                    payload.service_type,
+                    payload,
+                    key=f"{notification_id}_{payload.service_type.value}",
+                )
+
+                if success:
+                    success_count += 1
+                    logger.info(
+                        f"Sent {payload.service_type.value} notification to Kafka"
+                    )
+                else:
+                    logger.error(
+                        f"Failed to send {payload.service_type.value} notification to Kafka"
+                    )
+
+            all_successful = success_count == len(service_payloads)
+            logger.info(
+                f"Kafka sending completed: {success_count}/{len(service_payloads)} successful"
+            )
+
+            return all_successful
+
+        except Exception as e:
+            logger.error(f"Error sending to Kafka: {str(e)}")
+            return False
 
     def _prepare_services_array(
         self, request: NotificationRequest

@@ -10,6 +10,7 @@ from typing import Dict, List, Union
 from loguru import logger
 
 from app.constants.enums import BulkProcessingStrategy, NotificationType
+from app.kafka.kafka_client import get_kafka_producer
 from app.schemas.bulk_notification import (
     BulkEmailKafkaPayload,
     BulkNotificationRequest,
@@ -30,6 +31,7 @@ class BulkNotificationService:
         # Step 2: Create batches for each service
         service_batches = {}
         estimated_cost = {}
+        kafka_results = {}
 
         for channel in bulk_request.channels:
             if channel in channel_recipients and channel_recipients[channel]:
@@ -43,15 +45,11 @@ class BulkNotificationService:
                     channel, len(channel_recipients[channel])
                 )
 
-        # Step 3: Create Kafka payloads for all batches
-        total_kafka_messages = 0
-        for channel, batches in service_batches.items():
-            for batch in batches:
-                # Send to Kafka (this would be actual Kafka producer call)
-                logger.info(
-                    f"Created Kafka payload for {channel} batch {batch['batch_number']}"
+                # Step 3: Send batches to Kafka for this channel
+                kafka_result = await self._send_batches_to_kafka(
+                    channel, batches, notification_id
                 )
-                total_kafka_messages += 1
+                kafka_results[channel.value] = kafka_result
 
         # Step 4: Calculate completion time based on processing strategy
         completion_time = self._calculate_bulk_completion_time(
@@ -66,6 +64,62 @@ class BulkNotificationService:
             estimated_completion_time=completion_time,
             estimated_cost=estimated_cost,
         )
+
+    async def _send_batches_to_kafka(
+        self, channel: NotificationType, batches: List[Dict], notification_id: str
+    ) -> Dict[str, int]:
+        """
+        Send all batches for a service to Kafka
+        """
+        try:
+            kafka_producer = await get_kafka_producer()
+            results = {"success": 0, "failed": 0}
+
+            for batch in batches:
+                try:
+                    # Convert batch dict to appropriate payload type
+                    if channel == NotificationType.EMAIL:
+                        payload = BulkEmailKafkaPayload(**batch)
+                    elif channel == NotificationType.SMS:
+                        payload = BulkSMSKafkaPayload(**batch)
+                    elif channel == NotificationType.WHATSAPP:
+                        payload = BulkWhatsAppKafkaPayload(**batch)
+                    else:
+                        logger.error(f"Unsupported channel for Kafka: {channel}")
+                        results["failed"] += 1
+                        continue
+
+                    # Send to Kafka
+                    key = f"{notification_id}_{channel.value}_batch_{batch.get('batch_number', 1)}"
+                    success = await kafka_producer.send_notification(
+                        channel, payload, key
+                    )
+
+                    if success:
+                        results["success"] += 1
+                        logger.info(
+                            f"Batch {batch.get('batch_number')} sent to Kafka for {channel.value}"
+                        )
+                    else:
+                        results["failed"] += 1
+                        logger.error(
+                            f"Failed to send batch {batch.get('batch_number')} to Kafka for {channel.value}"
+                        )
+
+                except Exception as batch_error:
+                    logger.error(
+                        f"Error processing batch for cKafka: {str(batch_error)}"
+                    )
+                    results["failed"] += 1
+
+            logger.info(f"Kafka batch sending for {channel.value}: {results}")
+            return results
+
+        except Exception as e:
+            logger.error(
+                f"Error sending batches to Kafka for {channel.value}: {str(e)}"
+            )
+            return {"success": 0, "failed": len(batches)}
 
     def _analyze_recipients_by_channel(self, bulk_request: BulkNotificationRequest):
         channel_recipients = {

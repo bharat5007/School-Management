@@ -9,6 +9,7 @@ from loguru import logger
 
 from app.config.settings import settings
 from app.database.connection import init_db
+from app.kafka.kafka_client import kafka_producer
 from app.middleware.logging import LoggingMiddleware
 from app.routes import auth, bulk_notification, health, notification, users
 
@@ -19,9 +20,16 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up the application...")
     await init_db()
+    try:
+        await kafka_producer.start()
+        logger.info("Kafka producer initialized successfully")
+    except Exception as e:
+        logger.warning(f"Kafka producer initialization failed: {e}")
     logger.info("Database initialized successfully")
     yield
     # Shutdown
+    await kafka_producer.stop()
+    logger.info("Kafka producer stopped")
     logger.info("Shutting down the application...")
 
 
