@@ -6,10 +6,10 @@ from typing import List
 
 from loguru import logger
 
-from app.kafka.consumer.base_consumer import BaseNotificationConsumer
-from app.kafka.consumer.email_consumer import EmailNotificationConsumer
-from app.kafka.consumer.sms_consumer import SMSNotificationConsumer
-from app.kafka.consumer.whatsapp_consumer import WhatsAppNotificationConsumer
+from app.kafka.consumers.base_consumer import BaseNotificationConsumer
+from app.kafka.consumers.email_consumer import EmailNotificationConsumer
+from app.kafka.consumers.sms_consumer import SMSNotificationConsumer
+from app.kafka.consumers.whatsapp_consumer import WhatsAppNotificationConsumer
 
 
 class NotificationConsumerManager:
