@@ -9,8 +9,8 @@ from loguru import logger
 
 from app.config.settings import settings
 from app.database.connection import init_db
-from app.kafka.consumer.consumer_manager import consumer_manager
 from app.kafka.producer import kafka_producer
+from app.kafka.consumers.consumer_manager import consumer_manager
 from app.middleware.logging import LoggingMiddleware
 from app.routes import auth, bulk_notification, health, notification, users
 
